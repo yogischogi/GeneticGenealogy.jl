@@ -1,7 +1,7 @@
 # GeneticGenealogy
 
 GeneticGenealogy is a Julia module that currently contains
-only one function to calculate ethnicity estimates from
+one function to calculate ethnicity estimates from
 MyHeritage matches.
 
 ## Installation and usage
