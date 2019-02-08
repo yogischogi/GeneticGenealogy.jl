@@ -81,10 +81,10 @@ function ethnicity(matches_file::AbstractString,
     # Map matches' segments onto DNA.
     matches_segments = join(matches, segments, on = :Name, kind = :inner)
     dna = DNA()
-    map_countries!(dna, matches_segments, excludes)
+    map_countries!(dna, matches_segments, birth_country, excludes)
 
     # Evaluate ethnicities.
-    eths, segments_total = ethnicities(dna, birth_country)
+    eths, segments_total = ethnicities(dna)
     print_ethnicities(eths, segments_total)
 end
 
@@ -130,7 +130,6 @@ function ethnicity(matches_file::AbstractString,
     # Remove matches that match both parents from the child-parent matches.
     both, child_parent = remove_false_matches(child_parent, parent)
 
-
     # Add segments to the matches lists.
     child_parent_segments = join(child_parent, segments, on = :Name, kind = :inner)
     child_parent2_segments = join(child_parent2, segments, on = :Name, kind = :inner)
@@ -140,14 +139,14 @@ function ethnicity(matches_file::AbstractString,
     parent_dna = DNA()
     parent2_dna = DNA()
     both_dna = DNA()
-    map_countries!(parent_dna, child_parent_segments, excludes)
-    map_countries!(parent2_dna, child_parent2_segments, excludes)
-    map_countries!(both_dna, both_segments, excludes)
+    map_countries!(parent_dna, child_parent_segments, birth_country, excludes)
+    map_countries!(parent2_dna, child_parent2_segments, birth_country, excludes)
+    map_countries!(both_dna, both_segments, birth_country, excludes)
 
     # Evaluate ethnicities.
-    parent_eths, segments_total_1 = ethnicities(parent_dna, birth_country)
-    parent2_eths, segments_total_2 = ethnicities(parent2_dna, birth_country)
-    both_eths, segments_total_3 = ethnicities(both_dna, birth_country)
+    parent_eths, segments_total_1 = ethnicities(parent_dna)
+    parent2_eths, segments_total_2 = ethnicities(parent2_dna)
+    both_eths, segments_total_3 = ethnicities(both_dna)
 
     println("\nEthnicities you inherited from your parent.")
     print_ethnicities(parent_eths, segments_total_1)
@@ -190,7 +189,8 @@ The data frame "segments" must contain the following columns:
 :Country, :Chromosome, :StartLocation, :EndLocation.
 excludes contains a list of countries that should be excluded from mapping.
 """
-function map_countries!(dna::DNA, segments::DataFrame, excludes::Array{String})
+function map_countries!(dna::DNA, segments::DataFrame, birth_country::String, excludes::Array{String})
+    # Map matches' segments onto the DNA.
     nrows, _ = size(segments)
     for i in 1: nrows
         # Ignore close relatives.
@@ -216,10 +216,28 @@ function map_countries!(dna::DNA, segments::DataFrame, excludes::Array{String})
             end
         end
     end
+    # Map birth country onto DNA segments that are already populated.
+    if birth_country == "" || in(birth_country, excludes)
+        return
+    end
+    for i in eachindex(dna.chromosomes)
+        for j in eachindex(dna.chromosomes[i])
+            # Check if DNA segment is populated.
+            if length(keys(dna.chromosomes[i][j])) == 0
+                continue
+            end
+            # Add birth country.
+            if haskey(dna.chromosomes[i][j], birth_country)
+                dna.chromosomes[i][j][birth_country] += 1
+            else
+                dna.chromosomes[i][j][birth_country] = 1
+            end
+        end
+    end
 end
 
 """
-    ethnicities(dna::DNA, birth_country="")
+    ethnicities(dna::DNA)
 
 Calculate ethnicities for a given DNA sample.
 
@@ -229,11 +247,11 @@ exists that consists of segment entries. A segment entry is
 a String that holds the most likely country origin of the
 segment.
 """
-function ethnicities(dna::DNA, birth_country="")
+function ethnicities(dna::DNA)
     # Create an empty country entry for each DNA segment.
     ethSegments = Array{Array{String}}(undef, CHROMOSOMES)
     for i in 1:CHROMOSOMES
-        nSegs = div(CHROMOSOME_SIZES[i] + SEGMENT_LENGTH - 1, SEGMENT_LENGTH)
+        nSegs = length(dna.chromosomes[i])
         chromosome = Array{String}(undef, nSegs)
         for j in 1:nSegs
             chromosome[j] = ""
@@ -243,8 +261,8 @@ function ethnicities(dna::DNA, birth_country="")
 
     # Determine ethnicity for each segment.
     for i in 1:CHROMOSOMES
-        for j in 1:length(dna.chromosomes[i])
-            ethSegments[i][j] = most_common_ethnicity(dna.chromosomes[i][j], birth_country)
+        for j in eachindex(dna.chromosomes[i])
+            ethSegments[i][j] = most_common_ethnicity(dna.chromosomes[i][j])
         end
     end
 
@@ -402,7 +420,7 @@ function remove_false_matches(child_matches::DataFrame, parent_matches::DataFram
 end
 
 """
-    most_common_ethnicity(d::Dict{String, Integer}, birth_country="")::String
+    most_common_ethnicity(d::Dict{String, Integer})::String
 
 Eetermine the ethnicity based on a map that contains a count
 of matches from each country.
@@ -412,18 +430,9 @@ d is a dictionary that contains the number of matches for each country.
 Returns the name of the country that harbors the most matches
 or an empty string if there is no clear result.
 """
-function most_common_ethnicity(d::Dict{String, Integer}, birth_country="")::String
+function most_common_ethnicity(d::Dict{String, Integer})::String
     if length(keys(d)) == 0
         return ""
-    end
-
-    # Add tested person to the matches.
-    if birth_country != ""
-        if haskey(d, birth_country)
-            d[birth_country] += 1
-        else
-            d[birth_country] = 1
-        end
     end
 
     # Determine country with the most cousins.
