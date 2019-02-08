@@ -271,7 +271,7 @@ function ethnicities(dna::DNA)
     # Total number of evaluated segments.
     total = 0
     for i in 1:CHROMOSOMES
-        for j in 1:length(ethSegments[i])
+        for j in eachindex(ethSegments[i])
             if ethSegments[i][j] != ""
                 total += 1
                 if haskey(ethnicities, ethSegments[i][j])
