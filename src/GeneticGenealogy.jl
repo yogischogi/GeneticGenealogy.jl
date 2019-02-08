@@ -1,9 +1,8 @@
 """
 Miscealenous functions for genetic genealogy,
-currently only a function to calculate an ethnicity
+currently one function to calculate an ethnicity
 estimate.
 """
-module GeneticGenealogy end
 module GeneticGenealogy
 
 export ethnicity
