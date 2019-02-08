@@ -172,12 +172,12 @@ end
 function DNA()
     chromosomes = Array{Array{Dict{String, Integer}}}(undef, CHROMOSOMES)
     for i in 1:CHROMOSOMES
-	    nSegs = div(CHROMOSOME_SIZES[i] + SEGMENT_LENGTH - 1, SEGMENT_LENGTH)
-	    segments = Array{Dict{String, Integer}}(undef, nSegs)
-	    for j in 1:nSegs
-		    segments[j] = Dict{String, Integer}()
-	    end
-	    chromosomes[i] = segments
+        nSegs = div(CHROMOSOME_SIZES[i] + SEGMENT_LENGTH - 1, SEGMENT_LENGTH)
+        segments = Array{Dict{String, Integer}}(undef, nSegs)
+        for j in 1:nSegs
+            segments[j] = Dict{String, Integer}()
+        end
+        chromosomes[i] = segments
     end
     DNA(chromosomes)
 end
@@ -193,28 +193,28 @@ excludes contains a list of countries that should be excluded from mapping.
 function map_countries!(dna::DNA, segments::DataFrame, excludes::Array{String})
     nrows, _ = size(segments)
     for i in 1: nrows
-	    # Ignore close relatives.
-	    if segments[i, :EndLocation] - segments[i, :StartLocation] > MAX_MATCH_LENGTH
-		    continue
-	    end
+        # Ignore close relatives.
+        if segments[i, :EndLocation] - segments[i, :StartLocation] > MAX_MATCH_LENGTH
+            continue
+        end
 
-	    # Map matching segment onto the DNA.
-	    a = segments[i, :StartLocation] + SEGMENT_LENGTH
-	    b = segments[i, :EndLocation]
-	    c = segments[i, :Chromosome]
+        # Map matching segment onto the DNA.
+        a = segments[i, :StartLocation] + SEGMENT_LENGTH
+        b = segments[i, :EndLocation]
+        c = segments[i, :Chromosome]
         country = segments[i, :Country]
-	    # Ignore countries that should be excluded.
-	    if in(country, excludes)
-		    continue
-	    end
-	    for j in a:SEGMENT_LENGTH:b
-		    seg = div(j, SEGMENT_LENGTH)
-		    if haskey(dna.chromosomes[c][seg], country)
-			    dna.chromosomes[c][seg][country] += 1
-		    else
-			    dna.chromosomes[c][seg][country] = 1
-		    end
-	    end
+        # Ignore countries that should be excluded.
+        if in(country, excludes)
+            continue
+        end
+        for j in a:SEGMENT_LENGTH:b
+            seg = div(j, SEGMENT_LENGTH)
+            if haskey(dna.chromosomes[c][seg], country)
+                dna.chromosomes[c][seg][country] += 1
+            else
+                dna.chromosomes[c][seg][country] = 1
+            end
+        end
     end
 end
 
@@ -233,19 +233,19 @@ function ethnicities(dna::DNA, birth_country="")
     # Create an empty country entry for each DNA segment.
     ethSegments = Array{Array{String}}(undef, CHROMOSOMES)
     for i in 1:CHROMOSOMES
-	    nSegs = div(CHROMOSOME_SIZES[i] + SEGMENT_LENGTH - 1, SEGMENT_LENGTH)
-	    chromosome = Array{String}(undef, nSegs)
-	    for j in 1:nSegs
-		    chromosome[j] = ""
-	    end
-	    ethSegments[i] = chromosome
+        nSegs = div(CHROMOSOME_SIZES[i] + SEGMENT_LENGTH - 1, SEGMENT_LENGTH)
+        chromosome = Array{String}(undef, nSegs)
+        for j in 1:nSegs
+            chromosome[j] = ""
+        end
+        ethSegments[i] = chromosome
     end
 
     # Determine ethnicity for each segment.
     for i in 1:CHROMOSOMES
-	    for j in 1:length(dna.chromosomes[i])
-		    ethSegments[i][j] = most_common_ethnicity(dna.chromosomes[i][j], birth_country)
-	    end
+        for j in 1:length(dna.chromosomes[i])
+            ethSegments[i][j] = most_common_ethnicity(dna.chromosomes[i][j], birth_country)
+        end
     end
 
     # Count segment ethnicities.
@@ -253,16 +253,16 @@ function ethnicities(dna::DNA, birth_country="")
     # Total number of evaluated segments.
     total = 0
     for i in 1:CHROMOSOMES
-	    for j in 1:length(ethSegments[i])
-		    if ethSegments[i][j] != ""
-			    total += 1
-			    if haskey(ethnicities, ethSegments[i][j])
-				    ethnicities[ethSegments[i][j]] += 1
-			    else
-				    ethnicities[ethSegments[i][j]] = 1
-			    end
-		    end
-	    end
+        for j in 1:length(ethSegments[i])
+            if ethSegments[i][j] != ""
+                total += 1
+                if haskey(ethnicities, ethSegments[i][j])
+                    ethnicities[ethSegments[i][j]] += 1
+                else
+                    ethnicities[ethSegments[i][j]] = 1
+                end
+            end
+        end
     end
     return ethnicities, total
 end
@@ -276,15 +276,15 @@ function print_ethnicities(eth::Dict{String, Integer}, segments_total::Integer)
     # Sort results.
     results = []
     for (country, value) in eth
-	    percentage = value / segments_total * 100
-	    push!(results, (country, value, percentage))
+        percentage = value / segments_total * 100
+        push!(results, (country, value, percentage))
     end
     sort!(results, by = x -> x[2], rev = true)
 
     # Output results.
     println("Total: ", segments_total, " segments")
     for i in results
-	    @printf("%15s %4d %5.1f%%\n", i[1], i[2], i[3])
+        @printf("%15s %4d %5.1f%%\n", i[1], i[2], i[3])
     end
 end
 
@@ -393,9 +393,9 @@ function remove_false_matches(child_matches::DataFrame, parent_matches::DataFram
         name = row[:Name]
         childCM = row[:Total_cM_shared]
         if childCM > parentCM[name]
-	        push!(both, row)
+            push!(both, row)
         else
-	        push!(parent_cleaned, row)
+            push!(parent_cleaned, row)
         end
     end
     return both, parent_cleaned
@@ -413,34 +413,34 @@ Returns the name of the country that harbors the most matches
 or an empty string if there is no clear result.
 """
 function most_common_ethnicity(d::Dict{String, Integer}, birth_country="")::String
-	if length(keys(d)) == 0
-		return ""
-	end
+    if length(keys(d)) == 0
+        return ""
+    end
 
-	# Add tested person to the matches.
-	if birth_country != ""
+    # Add tested person to the matches.
+    if birth_country != ""
         if haskey(d, birth_country)
-		    d[birth_country] += 1
-	    else
-		    d[birth_country] = 1
-	    end
+            d[birth_country] += 1
+        else
+            d[birth_country] = 1
+        end
     end
 
     # Determine country with the most cousins.
-	country = ""
-	top = 0
+    country = ""
+    top = 0
     second = 0
-	for (key, value) in d
+    for (key, value) in d
         DEBUG && print(key, " ", value, "  ")
         if value > second && value <= top
             second = value
         end
-		if value > top
-			country = key
+        if value > top
+            country = key
             second = top
             top = value
-		end
-	end
+        end
+    end
     DEBUG && println()
 
     # Look if the most common country is valid.
