@@ -4,6 +4,8 @@ using DataFrames
 using DelimitedFiles
 using Printf
 
+const DEBUG = true
+
 const CHROMOSOMES = 22
 
 # Length of the chromosome segments that are used for mapping.
@@ -74,7 +76,7 @@ function ethnicity(matches_file::AbstractString,
     try
         matches = matches_to_dataframe(matches)
         segments = segments_to_dataframe(segments)
-    catch
+    catch ex
         error("Could not interpret files. Wrong format? ", ex)
     end
 
@@ -118,7 +120,7 @@ function ethnicity(matches_file::AbstractString,
         matches = matches_to_dataframe(matches)
         segments = segments_to_dataframe(segments)
         parent = matches_to_dataframe(parent)
-    catch
+    catch ex
         error("Could not interpret files. Wrong format? ", ex)
     end
 
