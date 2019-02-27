@@ -1,7 +1,7 @@
 name = "GeneticGenealogy"
 uuid = "820b17f8-2949-11e9-06f4-cf6b982d03de"
 authors = ["Dirk Struve <yogischogi@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
