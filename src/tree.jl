@@ -17,8 +17,7 @@ mutable struct Clade <: TreeElement
     subclades::Array{Clade}
 end
 
-
-function Clade(fields::Union{Array{AbstractString}, Array{SubString{String}}})
+function Clade(fields::Array{<: AbstractString})
     name = strip(fields[1])
     Clade(name, fields, [], [])
 end
@@ -43,7 +42,7 @@ function readtree(filename::AbstractString)
 end
 
 
-function readtrees(filenames::Array{AbstractString})
+function readtrees(filenames::Array{<: AbstractString})
     if isempty(filenames)
         error("No filenames provided.")
     end
@@ -83,8 +82,7 @@ function parsetree!(lines::Array{String})
     return node
 end
 
-
-function print(node::Clade, indent::Int)
+function print(node::Clade; indent::Int= 0)
     buffer = IOBuffer()
     print(buffer, node, indent)
     print(String(take!(buffer)))
@@ -193,8 +191,6 @@ function calculateTMRCAs(tree::Clade; cal::Float64=140.0, offset::Float64=60.0)
     return resulttree
 end
 
-
-
 # Count white spaces.
 function indentation(line::String)
     indent = 0
@@ -210,8 +206,7 @@ function printspaces(buffer::IOBuffer, count::Int)
     end
 end
 
-
-function printfields(buffer::IOBuffer, fields::Array)
+function printfields(buffer::IOBuffer, fields::Array{<: AbstractString})
     if isempty(fields)
         return
     end
