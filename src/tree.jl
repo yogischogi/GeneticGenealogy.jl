@@ -17,7 +17,7 @@ mutable struct Clade <: TreeElement
     subclades::Array{Clade}
 end
 
-function Clade(fields::Array{<: AbstractString})
+function Clade(fields::Array{<:AbstractString})
     name = strip(fields[1])
     Clade(name, fields, [], [])
 end
@@ -42,7 +42,7 @@ function readtree(filename::AbstractString)
 end
 
 
-function readtrees(filenames::Array{<: AbstractString})
+function readtrees(filenames::Array{<:AbstractString})
     if isempty(filenames)
         error("No filenames provided.")
     end
@@ -82,9 +82,9 @@ function parsetree!(lines::Array{String})
     return node
 end
 
-function print(node::Clade; indent::Int= 0)
+function print(node::Clade)
     buffer = IOBuffer()
-    print(buffer, node, indent)
+    print(buffer, node, 0)
     print(String(take!(buffer)))
 end
 
@@ -140,7 +140,7 @@ function replace!(tree::Clade, pat_f::Pair)
     end
 end
 
-function deletefields!(tree::Clade, keys::Array{String})
+function deletefields!(tree::Clade, keys::Array{<:AbstractString})
     tree.fields = deletefields(tree.fields, keys)
     for sample in tree.samples
         sample.fields = deletefields(sample.fields, keys)
@@ -151,7 +151,7 @@ function deletefields!(tree::Clade, keys::Array{String})
 end
 
 
-function deletefields(fields:: Array{String}, keys::Array{String})
+function deletefields(fields:: Array{<:AbstractString}, keys::Array{<:AbstractString})
     newfields = []
     for field in fields
         isclean = true
@@ -206,7 +206,7 @@ function printspaces(buffer::IOBuffer, count::Int)
     end
 end
 
-function printfields(buffer::IOBuffer, fields::Array{<: AbstractString})
+function printfields(buffer::IOBuffer, fields::Array{<:AbstractString})
     if isempty(fields)
         return
     end
