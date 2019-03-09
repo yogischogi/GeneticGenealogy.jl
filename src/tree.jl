@@ -1,5 +1,4 @@
-import Base.print
-import Base.replace!
+import Base: print, replace!, show
 
 # Indentation for output.
 const INDENT_STEP = 4
@@ -82,25 +81,22 @@ function parsetree!(lines::Array{String})
     return node
 end
 
-function print(node::Clade)
-    buffer = IOBuffer()
-    print(buffer, node, 0)
-    print(String(take!(buffer)))
+function Base.show(io::IO, node::Clade)
+    print(io, node, 0)
 end
 
-function print(buffer::IOBuffer, node::Clade, indent::Int)
+function print(io::IO, node::Clade, indent::Int)
     subindent = indent + INDENT_STEP
-    printspaces(buffer, indent)
-    # print(buffer, node.name)
-    printfields(buffer, node.fields)
-    println(buffer)
+    printspaces(io, indent)
+    printfields(io, node.fields)
+    println(io)
     for sample in node.samples
-        printspaces(buffer, subindent)
-        printfields(buffer, sample.fields)
-        println(buffer)
+        printspaces(io, subindent)
+        printfields(io, sample.fields)
+        println(io)
     end
     for subclade in node.subclades
-        print(buffer, subclade, subindent)
+        print(io, subclade, subindent)
     end
 end
 
@@ -200,21 +196,21 @@ function indentation(line::String)
     return indent
 end
 
-function printspaces(buffer::IOBuffer, count::Int)
+function printspaces(io::IO, count::Int)
     for i = 1:count
-        print(buffer, " ")
+        print(io, " ")
     end
 end
 
-function printfields(buffer::IOBuffer, fields::Array{<:AbstractString})
+function printfields(io::IO, fields::Array{<:AbstractString})
     if isempty(fields)
         return
     end
     for i in 1:length(fields)-1
-        print(buffer, fields[i])
-        print(buffer, ",")
+        print(io, fields[i])
+        print(io, ",")
     end
-    print(buffer, fields[end])
+    print(io, fields[end])
 end
 
 

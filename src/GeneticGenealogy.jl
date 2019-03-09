@@ -5,7 +5,7 @@ Functions to manipulate phylogenetic trees and to calculate TMRCAs.
 """
 module GeneticGenealogy
 
-export ethnicity, readtree, readtrees, print, writetree, calculateTMRCAs
+export ethnicity, readtree, readtrees, writetree, calculateTMRCAs
 
 include("ethnicity.jl")
 include("tree.jl")

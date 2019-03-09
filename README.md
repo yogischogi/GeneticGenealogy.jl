@@ -1,8 +1,11 @@
 # GeneticGenealogy
 
-GeneticGenealogy is a Julia module that currently contains
-one function to calculate ethnicity estimates from
-MyHeritage matches.
+GeneticGenealogy is a Julia module that contains methods
+to
+
+1. calculate ethnicity estimates from MyHeritage matches.
+2. calculate TMRCAs on a phylogenetic tree.
+
 
 ## Installation and usage
 
@@ -15,7 +18,7 @@ MyHeritage matches.
 4. You can now use the `ethnicity` function to calculate ethnicity
    estimates.
 
-### Example
+## Calculate ethnicity estimate
 
 To run this example you need your `matches.csv` and your `shared_segments.csv`
 file from MyHeritage. You can find them under `MyHeritage -> DNA Matches ->
@@ -33,7 +36,7 @@ Total: 1124 segments
     Netherlands  106   9.4%
 ```
 
-## How does it work?
+### How does it work?
 
 Most big companies calculate ethnicity estimates based on
 reference populations. The result shows the genetic similarity to
@@ -63,13 +66,101 @@ can be excluded from the calculation.
 
 The approach has the benefit that it does not need any reference
 populations. If your ancestors were from England they were English,
-regardless of wether they were typical English or not.
+regardless of whether they were typical English or not.
 
 The downside of this method is that it needs many relatives for
 a good ethnicity estimate. Also if some countries test more than
 others or are not represented at all this distorts the results.
 
 
+## Calculate TMRCAs on a phylogenetic tree
+
+To calculate TMRCA estimates it is necessary to install the
+[Phyloage](https://github.com/yogischogi/phyloage) program first.
+Make sure that it is within your `PATH` variable so that it can be found.
+
+You will need a file that contains a phylogenetic tree with
+samples and the number of SNP mutations for each sample and each
+branch. A simple tree looks like this:
+
+```
+P310
+    P312, snps: 2
+        id:001, snps: 30, Celtic warrior
+        id:002, snps: 36, Spanish bull fighter
+    U106, snps:1
+        id:0815, snps: 34, Germanic hog hunter
+        id:003, snps: 36, German waggon builder
+```
+
+Let the file be called `P310.txt`. Now you can calculate the
+TMRCAs:
+
+```julia
+julia> using GeneticGenealogy
+julia> a = readtree("P310.txt")
+julia> b = calculateTMRCAs(a)
+julia> writetree("results.txt", b)
+```
+
+The file `results.txt` contains the tree with TMRCA estimates
+and confidence intervals.
+
+```
+P310, TMRCA: 5031, CI:[4249, 5959]
+    P312, TMRCA: 4680, CI:[3674, 5966]
+        id:001, Celtic warrior
+        id:002, Spanish bull fighter
+    U106, TMRCA: 4960, CI:[3920, 6280]
+        id:0815, Germanic boar hunter
+        id:003, German waggon builder
+```
+
+You can calibrate your tree by using different mutation rates.
+In this case `calculateTMRCAs` allows an optional calibration parameter,
+for example `calculateTMRCAs(a, cal=140.0)` if one mutation occurs
+in 140 years on average.
+
+It is also possible to merge several trees. This is very useful
+if trees get very big and different persons work on different branches.
+
+Imagine that the branches of our previous tree are stored in three
+different files.
+
+```
+backbone.txt:
+P310
+    P312
+    U106
+
+P312.txt:
+P312, snps: 2
+    id:001, snps: 30, Celtic warrior
+    id:002, snps: 36, Spanish bull fighter
+
+U106.txt:
+U106, snps:1
+    id:0815, snps: 34, Germanic hog hunter
+    id:003, snps: 36, German waggon builder
+```
+
+Merging them together is done by
+
+```julia
+julia> d = readtrees(["backbone.txt", "P312.txt", "U106.txt"])
+```
+
+The result is of course:
+
+```
+P310
+    P312, snps: 2
+        id:001, snps: 30, Celtic warrior
+        id:002, snps: 36, Spanish bull fighter
+    U106, snps:1
+        id:0815, snps: 34, Germanic hog hunter
+        id:003, snps: 36, German waggon builder
+```
 
 
 
