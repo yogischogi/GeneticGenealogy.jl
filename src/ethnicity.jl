@@ -361,10 +361,10 @@ function segments_to_dataframe(segments::Array{String, 2})
     block_name = ""
     rows, _ = size(segments)
     for i = 2:rows
-        name = segments[i, 2]
-        chromosome = segments[i, 3]
-        startloc = segments[i, 4]
-        endloc = segments[i, 5]
+        name = segments[i, 3]
+        chromosome = segments[i, 4]
+        startloc = segments[i, 5]
+        endloc = segments[i, 6]
         if name == "" || chromosome == "" || startloc == "" || endloc == ""
             continue
         end
