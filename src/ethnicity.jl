@@ -81,7 +81,7 @@ function ethnicity(matches_file::AbstractString,
     end
 
     # Map matches' segments onto DNA.
-    matches_segments = join(matches, segments, on = :Name, kind = :inner)
+    matches_segments = innerjoin(matches, segments, on = :Name)
     dna = DNA()
     map_countries!(dna, matches_segments, birth_country, excludes)
 
@@ -126,16 +126,16 @@ function ethnicity(matches_file::AbstractString,
 
     # Phase matches.
     # Matches that match child and parent.
-    child_parent = join(matches, parent, on = :Name, kind = :inner, makeunique=true)
+    child_parent = innerjoin(matches, parent, on = :Name, makeunique=true)
     # Matches that only match the second parent.
-    child_parent2 = join(matches, child_parent, on = :Name, kind = :anti, makeunique=true)
+    child_parent2 = antijoin(matches, child_parent, on = :Name, makeunique=true)
     # Remove matches that match both parents from the child-parent matches.
     both, child_parent = remove_false_matches(child_parent, parent)
 
     # Add segments to the matches lists.
-    child_parent_segments = join(child_parent, segments, on = :Name, kind = :inner)
-    child_parent2_segments = join(child_parent2, segments, on = :Name, kind = :inner)
-    both_segments = join(both, segments, on = :Name, kind = :inner)
+    child_parent_segments = innerjoin(child_parent, segments, on = :Name)
+    child_parent2_segments = innerjoin(child_parent2, segments, on = :Name)
+    both_segments = innerjoin(both, segments, on = :Name)
 
     # Map matches' segments onto DNA.
     parent_dna = DNA()
