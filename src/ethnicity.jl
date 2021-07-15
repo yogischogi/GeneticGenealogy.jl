@@ -1,5 +1,6 @@
 # Functions to calculate an ethnicity estimate.
 
+using CSV
 using DataFrames
 using DelimitedFiles
 using Printf
@@ -81,7 +82,9 @@ function ethnicity(matches_file::AbstractString,
     end
 
     # Map matches' segments onto DNA.
-    matches_segments = innerjoin(matches, segments, on = :Name)
+    #matches_segments = innerjoin(matches, segments, on = :Name)
+    matches_segments = innerjoin(matches, segments, on = :Match_ID)
+
     dna = DNA()
     map_countries!(dna, matches_segments, birth_country, excludes)
 
@@ -126,16 +129,16 @@ function ethnicity(matches_file::AbstractString,
 
     # Phase matches.
     # Matches that match child and parent.
-    child_parent = innerjoin(matches, parent, on = :Name, makeunique=true)
+    child_parent = innerjoin(matches, parent, on = :Match_ID, makeunique=true)
     # Matches that only match the second parent.
-    child_parent2 = antijoin(matches, child_parent, on = :Name, makeunique=true)
+    child_parent2 = antijoin(matches, child_parent, on = :Match_ID, makeunique=true)
     # Remove matches that match both parents from the child-parent matches.
     both, child_parent = remove_false_matches(child_parent, parent)
 
     # Add segments to the matches lists.
-    child_parent_segments = innerjoin(child_parent, segments, on = :Name)
-    child_parent2_segments = innerjoin(child_parent2, segments, on = :Name)
-    both_segments = innerjoin(both, segments, on = :Name)
+    child_parent_segments = innerjoin(child_parent, segments, on = :Match_ID)
+    child_parent2_segments = innerjoin(child_parent2, segments, on = :Match_ID)
+    both_segments = innerjoin(both, segments, on = :Match_ID)
 
     # Map matches' segments onto DNA.
     parent_dna = DNA()
@@ -316,30 +319,23 @@ sometimes contain an invalid CSV format and can not be read by
 the standard Julia CSV package. So we must do this manually.
 """
 function matches_to_dataframe(matches::Array{String, 2})
-    df = DataFrame(Name = String[], Country = String[], Total_cM_shared = Float64[])
+    df = DataFrame(Match_ID = String[], Match_Name = String[], Country = String[], Total_cM_shared = Float64[])
 
     # Copy matches rows into DataFrame.
-    names = Dict{String, Int64}()
+    match_names = Dict{String, Int64}()
     rows, _ = size(matches)
     for i = 2:rows
+        match_id = matches[i, 1]
         country = matches[i, 4]
-        name = matches[i, 2]
+        match_name = matches[i, 2]
         matches_cM = matches[i, 10]
-        if country == "" || name == "" || matches_cM == ""
+        if country == "" || match_name == "" || matches_cM == ""
             continue
-        end
-
-        # Ensure that names are unique.
-        if !haskey(names, name)
-            names[name] = 1
-        else
-            names[name] += 1
-            name = name * string(names[name])
         end
 
         # Convert cM to Float.
         cM = parse(Float64, replace(matches_cM, "," => ""))
-        push!(df, [name, country, cM])
+        push!(df, [match_id, match_name, country, cM])
     end
     return df
 end
@@ -353,37 +349,23 @@ They can not always be read by the standard Julia CSV package.
 So we must do this manually.
 """
 function segments_to_dataframe(segments::Array{String, 2})
-    df = DataFrame(Name = String[], Chromosome = Integer[], StartLocation = Integer[], EndLocation = Integer[])
+    df = DataFrame(Match_ID = String[], Chromosome = Integer[], StartLocation = Integer[], EndLocation = Integer[])
 
     # Copy segments rows into DataFrame.
-    names = Dict{String, Int64}()
-    prev_name = ""
-    block_name = ""
     rows, _ = size(segments)
     for i = 2:rows
-        name = segments[i, 3]
+        match_id = segments[i, 1]    
         chromosome = segments[i, 4]
         startloc = segments[i, 5]
         endloc = segments[i, 6]
-        if name == "" || chromosome == "" || startloc == "" || endloc == ""
+        if  chromosome == "" || startloc == "" || endloc == ""
             continue
         end
         
-        # Make sure that different persons get different names.
-        if !haskey(names, name)
-            names[name] = 1
-            block_name = name
-        elseif name != prev_name
-            # New block os segments which has the same name as an older block.
-            names[name] += 1
-            block_name = name * string(names[name])
-        end
-        prev_name = name
-
         chromosome = parse(Int64, chromosome)
         startloc = parse(Int64, startloc)
         endloc = parse(Int64, endloc)
-        push!(df, [block_name, chromosome, startloc, endloc])
+        push!(df, [match_id, chromosome, startloc, endloc])
     end
     return df
 end
